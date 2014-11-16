@@ -1,5 +1,6 @@
 
 import java.text.DecimalFormat;
+import java.util.ArrayList;
 
 public class DataCollector implements DeviceListener {
     private static final int SCALE = 18;
@@ -8,6 +9,13 @@ public class DataCollector implements DeviceListener {
     private double yawW;
     private double maxForce;
     private double maxAccel;
+    private double vMax;
+    private double maxEnergy;
+    private double maxMomentum;
+    private ArrayList<Integer> pizza;
+    private int time;
+    public int counter;
+    private long lastTimeStamp;
     private final double poundToNewton = 4.44822162;
     private Pose currentPose;
     private Arm whichArm;
@@ -21,6 +29,11 @@ public class DataCollector implements DeviceListener {
         rollW = 0;
         pitchW = 0;
         yawW = 0;
+        counter = 0;
+        time=0;
+        counter = 0;
+        pizza = new ArrayList<Integer>();
+        pizza.add(new Integer(0));
         currentPose = new Pose();
     }
 
@@ -48,13 +61,21 @@ public class DataCollector implements DeviceListener {
         else
             type = 1;
 
-        double newForce = getForce(trueAccel,type);
+        double newForce = getForce(pizza.get(counter),trueAccel,type);
 
         if(maxForce<newForce)
         {
             maxForce = newForce;
             maxAccel = trueAccel;
+            
         }
+        else
+        {
+            //5ms per vector
+            counter++;
+            pizza.add(new Integer(counter/20));
+        }
+        counter++;
         /**
          * Boxers can hit with an average force of 765 lbs
         so, let us take that as an example and see what the bosy can with stand:
@@ -180,10 +201,15 @@ public class DataCollector implements DeviceListener {
         //String yDisplay = String.format("[%s%s]", repeatCharacter('*', (int) pitchW), repeatCharacter(' ', (int) (SCALE - pitchW)));
         //String zDisplay = String.format("[%s%s]", repeatCharacter('*', (int) yawW), repeatCharacter(' ', (int) (SCALE - yawW)));
 
-        DecimalFormat hun = new DecimalFormat("0.00N");
-        String fDisplay = "Max Force = " + hun.format(maxForce);
-
-        builder.append(fDisplay);
+        DecimalFormat hunN = new DecimalFormat("0.00N");
+        String fDisplay = "Max Force = " + hunN.format(maxForce);
+        DecimalFormat hunV = new DecimalFormat("0.00M/s");
+        String vDisplay = "Max Velocity = " + hunV.format(vMax);
+        DecimalFormat hunP = new DecimalFormat("0.00kg*M/s");
+        String pDisplay = "Max Momentum = " + hunP.format(maxMomentum);
+        DecimalFormat hunE = new DecimalFormat("0.00J");
+        String eDisplay = "Max Energy = " + hunE.format(maxEnergy);
+        builder.append(fDisplay + vDisplay + pDisplay + eDisplay);
         //         String poseString = null;
         //         if (whichArm != null) {
         //             String poseTypeString = currentPose.getType()
@@ -205,7 +231,7 @@ public class DataCollector implements DeviceListener {
         return builder.toString();
     }
 
-    private double getForce(double trueAcceleration, int type)
+    private double getForce(int time, double trueAcceleration, int type)
     {
         switch(type)
         {
@@ -219,7 +245,9 @@ public class DataCollector implements DeviceListener {
             forearm = massLargeForearm;
             break;
         }
-
+        double vMax = trueAcceleration/ (double)time;
+        double maxMomentum = vMax * forearm;
+        double maxEnergy = .5 * forearm * vMax * vMax;
         return forearm*trueAcceleration;
     }
 }
