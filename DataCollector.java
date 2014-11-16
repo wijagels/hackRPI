@@ -1,14 +1,5 @@
 
-import com.thalmic.myo.DeviceListener;
-import com.thalmic.myo.FirmwareVersion;
-import com.thalmic.myo.Myo;
-import com.thalmic.myo.Pose;
-import com.thalmic.myo.Quaternion;
-import com.thalmic.myo.Vector3;
-import com.thalmic.myo.enums.Arm;
-import com.thalmic.myo.enums.PoseType;
-import com.thalmic.myo.enums.VibrationType;
-import com.thalmic.myo.enums.XDirection;
+import java.text.DecimalFormat;
 
 public class DataCollector implements DeviceListener {
     private static final int SCALE = 18;
@@ -16,14 +7,13 @@ public class DataCollector implements DeviceListener {
     private double pitchW;
     private double yawW;
     private double maxForce;
-    private double maxAccel
+    private double maxAccel;
     private Pose currentPose;
     private Arm whichArm;
     private final double massSmallForearm = 1.1;
     private final double massAvgForearm = 1.4;
     private final double massLargeForearm = 1.6;
     private double forearm;
-
 
     public DataCollector() 
     {
@@ -47,6 +37,7 @@ public class DataCollector implements DeviceListener {
         if(maxForce<newForce)
         {
             maxForce = newForce;
+            maxAccel = trueAccel;
         }
 
         //         Quaternion normalized = rotation.normalized();
@@ -82,7 +73,7 @@ public class DataCollector implements DeviceListener {
     }
 
     @Override
-    public void onAccelerometerData(Myo myo, long timestamp, Vector3 accel) {
+    public void onOrientationData(Myo myo, long timestamp, Quaternion bullshit) {
     }
 
     @Override
@@ -120,19 +111,17 @@ public class DataCollector implements DeviceListener {
         DecimalFormat hun = new DecimalFormat("0.00N");
         String fDisplay = "Max Force = " + hun.format(maxForce);
         
-        String poseString = null;
-        if (whichArm != null) {
-            String poseTypeString = currentPose.getType()
-                .toString();
-            poseString = String.format("[%s][%s%" + (SCALE - poseTypeString.length()) + "s]", whichArm == Arm.ARM_LEFT ? "L" : "R", poseTypeString, " ");
-        } else {
-            poseString = String.format("[?][%14s]", " ");
-        }
-
-        builder.append(xDisplay);
-        builder.append(yDisplay);
-        builder.append(zDisplay);
-        builder.append(poseString);
+        builder.append(fDisplay);
+        //         String poseString = null;
+        //         if (whichArm != null) {
+        //             String poseTypeString = currentPose.getType()
+        //                 .toString();
+        //             poseString = String.format("[%s][%s%" + (SCALE - poseTypeString.length()) + "s]", whichArm == Arm.ARM_LEFT ? "L" : "R", poseTypeString, " ");
+        //         } else {
+        //             poseString = String.format("[?][%14s]", " ");
+        //         }
+        // 
+        //         builder.append(poseString);
         return builder.toString();
     }
 
@@ -144,7 +133,7 @@ public class DataCollector implements DeviceListener {
         return builder.toString();
     }
 
-    private getForce(double trueAcceleration, int type)
+    private double getForce(double trueAcceleration, int type)
     {
         switch(type)
         {
@@ -158,5 +147,7 @@ public class DataCollector implements DeviceListener {
             forearm = massLargeForearm;
             break;
         }
+
+        return forearm*trueAcceleration;
     }
 }
