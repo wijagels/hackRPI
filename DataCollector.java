@@ -8,6 +8,7 @@ public class DataCollector implements DeviceListener {
     private double yawW;
     private double maxForce;
     private double maxAccel;
+    private final double poundToNewton = 4.44822162;
     private Pose currentPose;
     private Arm whichArm;
     private final double massSmallForearm = 1.1;
@@ -30,8 +31,23 @@ public class DataCollector implements DeviceListener {
         //         double accelY = accelVector.getY();
         //         double accelZ = accelVector.getZ();
 
-        int type = 1;
-        double trueAccel = accelVector.magnitude();
+        int type = 0;
+        double trueAccel = accelVector.magnitude()*9.81;
+
+        
+
+        int weight=0;
+        if(weight>=215)
+        {
+            type = 3;
+        }
+        else if(weight >= 180)
+        {
+            type = 2;
+        }
+        else
+            type = 1;
+
         double newForce = getForce(trueAccel,type);
 
         if(maxForce<newForce)
@@ -39,7 +55,63 @@ public class DataCollector implements DeviceListener {
             maxForce = newForce;
             maxAccel = trueAccel;
         }
-
+        /**
+         * Boxers can hit with an average force of 765 lbs
+        so, let us take that as an example and see what the bosy can with stand:
+        Biomechanical injury tolerance levels:
+        Throat- 300 lbs of force
+        Frontal bone ( forehaed)- 1900 lbs
+        Back of head ( occiptal)- 2100 lbs
+        Temporal - 1400 lbs
+        Zygomatic-800 lbs
+        mandible - 800 lbs
+        maxilla - 500 lbs
+        Lat. Maxilla - 700 lbs
+        "nasal bone"- 200 lbs
+        Cervical vertebra - 500 lbs
+        Crown of head - 1350 lbs
+        area above the ear - 650 lbs
+        sternum with 4" defelction ( penetration) - 960 lbs
+        ribs - 400 lbs ( 1-3 ribs are the hardest, 4-9 the most common to fracture)
+        Draw you own conclusions :)
+         */
+        if(newForce>=2100*poundToNewton)
+        {
+            System.out.print("By goly you broke the back of that mans skull!, you can't be human!");
+        }
+        else if(newForce>=1900*poundToNewton)
+        {
+            System.out.print("Holy cucumbers you broke the guys forehead! that is something you want to write home about");
+        }
+        else if(newForce>=1400*poundToNewton)
+        {
+            System.out.print("Thats enought to crack the mans temporals!");
+        }
+        else if(newForce>=1350*poundToNewton)
+        {
+            System.out.print("YouJustBrokeHisDome.jpg");
+        }
+        else if(newForce>=960*poundToNewton)
+        {
+            System.out.print("Breaking a Sternum aint that bad!");
+        }
+        else if(newForce>=800*poundToNewton)
+        {
+            System.out.print("You either A) broke his jaw, or B) his cheekbone");
+        }
+        else if(newForce>=500*poundToNewton)
+        {
+            System.out.print("You broke his upper jaw, just below the nose");
+        }
+        else if(newForce>=400*poundToNewton)
+        {
+            System.out.print("Managed to break a few ribs!");
+        }
+        else
+        {
+            System.out.print("WeakSauce.bmp");
+        }
+        
         //         Quaternion normalized = rotation.normalized();
         // 
         //         double roll = Math.atan2(2.0f * (normalized.getW() * normalized.getX() + normalized.getY() * normalized.getZ()), 1.0f - 2.0f * (normalized.getX() * normalized.getX() + normalized.getY() * normalized.getY()));
@@ -110,7 +182,7 @@ public class DataCollector implements DeviceListener {
 
         DecimalFormat hun = new DecimalFormat("0.00N");
         String fDisplay = "Max Force = " + hun.format(maxForce);
-        
+
         builder.append(fDisplay);
         //         String poseString = null;
         //         if (whichArm != null) {
