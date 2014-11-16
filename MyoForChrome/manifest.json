@@ -4,10 +4,10 @@
   "description": "Brah",
   "version": "1.0",
   
-  "permissions": [ "tabs" ],
+  "permissions": [ "tabs", "background" ],
   
-  "browser_action": {
-    "scripts": [ "background.js"]
+  "background": {
+    "scripts": ["myo.js", "background.js"]
   },
   "content_scripts": [ {
     "js": [ "jquery-2.1.1.js", "myo.js" ],
