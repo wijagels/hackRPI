@@ -9,8 +9,6 @@ end
 
 function onForegroundWindowChange(app, title)
     myo.debug("onForegroundWindowChange: " .. app .. ", " .. title)
-    local x = 0
-  if(app == "com.google.Chrome") then while x < 3 do myo.vibrate("short") x = x + 1  end  end
     return true
 end
 
