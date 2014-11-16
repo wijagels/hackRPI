@@ -9,9 +9,5 @@
   "background": {
     "scripts": ["myo.js", "background.js"]
   },
-  "content_scripts": [ {
-    "js": [ "jquery-2.1.1.js", "myo.js" ],
-    "matches": [ "http://*/*", "https://*/*"]
-  }]
   
 }
