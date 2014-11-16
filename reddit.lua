@@ -21,6 +21,8 @@ function onPoseEdge(pose, edge)
 				myo.keyboard("a", "press")
 			elseif myo.getPitch() > 0.6 then
 				myo.keyboard("z", "press")
+			else
+				myo.keyboard("return", "press", "shift")
 			end
 		end
 	end
