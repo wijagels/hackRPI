@@ -8,6 +8,8 @@
 #include <string>
 #include <algorithm>
 
+using namespace std;
+
 // The only file that needs to be included to use the Myo C++ SDK is myo.hpp.
 #include <myo/myo.hpp>
 
@@ -18,7 +20,7 @@
 class DataCollector : public myo::DeviceListener {
 public:
 	DataCollector()
-		: onArm(false), roll_w(0), pitch_w(0), yaw_w(0), acc(0), massSmallForearm(3.1), massAvgForearm(3.9), massLargeForearm(4.6), forearm(0), maxForce(0), maxAccel(0), currentPose()
+		: onArm(false), roll_w(0), pitch_w(0), yaw_w(0), acc(0), massSmallForearm(3.1), massAvgForearm(3.9), massLargeForearm(4.6), forearm(0), maxForce(0), maxAccel(0), poundToNewton(4.44822162), times(0), currentPose()
 	{
 	}
 
@@ -54,7 +56,6 @@ public:
 
 	}
 
-
 	// onOrientationData() is called whenever the Myo device provides its current orientation, which is represented
 	// as a unit quaternion.
 	void onAccelerometerData(myo::Myo* myo, uint64_t timestamp, const myo::Vector3<float>& accel)
@@ -64,12 +65,26 @@ public:
 		//using std::sqrt;
 		//using std::max;
 		//using std::min;
-
-
+		times = timestamp - times;
 		acc = static_cast<float>(accel.x());
 
-		int type = 3;
+		int type = 0;
 		double trueAccel = accel.x()*9.81;
+
+		int weight = 0;
+
+		if (weight >= 215)
+		{
+			type = 3;
+		}
+		else if (weight >= 180)
+		{
+			type = 2;
+		}
+		else
+			type = 1;
+
+
 		double newForce = getForce(trueAccel, type);
 
 		if (maxForce < newForce)
@@ -78,6 +93,62 @@ public:
 			maxAccel = trueAccel;
 		}
 
+		/**
+		* Boxers can hit with an average force of 765 lbs
+		so, let us take that as an example and see what the bosy can with stand:
+		Biomechanical injury tolerance levels:
+		Throat- 300 lbs of force
+		Frontal bone ( forehead)- 1900 lbs
+		Back of head ( occiptal)- 2100 lbs
+		Temporal - 1400 lbs
+		Zygomatic-800 lbs
+		mandible - 800 lbs
+		maxilla - 500 lbs
+		Lat. Maxilla - 700 lbs
+		"nasal bone"- 200 lbs
+		Cervical vertebra - 500 lbs
+		Crown of head - 1350 lbs
+		area above the ear - 650 lbs
+		sternum with 4" deflection ( penetration) - 960 lbs
+		ribs - 400 lbs ( 1-3 ribs are the hardest, 4-9 the most common to fracture)
+		Draw you own conclusions :)
+		*/
+		if (newForce >= 2100 * poundToNewton)
+		{
+			cout<< ("By golly you broke the back of that mans skull!, you can't be human!");
+		}
+		else if (newForce >= 1900 * poundToNewton)
+		{
+			cout << ("Holy cucumbers you broke the guys forehead! that is something you want to write home about");
+		}
+		else if (newForce >= 1400 * poundToNewton)
+		{
+			cout << ("That's enough to crack the mans temporals!");
+		}
+		else if (newForce >= 1350 * poundToNewton)
+		{
+			cout << ("YouJustBrokeHisDome.jpg");
+		}
+		else if (newForce >= 960 * poundToNewton)
+		{
+			cout << ("Breaking a Sternum ain't that bad!");
+		}
+		else if (newForce >= 800 * poundToNewton)
+		{
+			cout << ("You either A) broke his jaw, or B) his cheekbone");
+		}
+		else if (newForce >= 500 * poundToNewton)
+		{
+			cout << ("You broke his upper jaw, just below the nose");
+		}
+		else if (newForce >= 400 * poundToNewton)
+		{
+			cout << ("\nManaged to break a few ribs!");
+		}
+		else if (newForce >= 50 * poundToNewton)
+		{
+			cout << ("\nWeakSauce.bmp");
+		}
 
 
 
@@ -138,6 +209,7 @@ public:
 		//<< '[' << std::string(pitch_w, '*') << std::string(18 - pitch_w, ' ') << ']'
 		//<< '[' << std::string(yaw_w, '*') << std::string(18 - yaw_w, ' ') << ']';
 		std::cout << '[' << maxForce << ']';
+		std::cout << '[' << times << ']';
 
 		if (onArm) {
 			// Print out the currently recognized pose and which arm Myo is being worn on.
@@ -145,14 +217,14 @@ public:
 			// Pose::toString() provides the human-readable name of a pose. We can also output a Pose directly to an
 			// output stream (e.g. std::cout << currentPose;). In this case we want to get the pose name's length so
 			// that we can fill the rest of the field with spaces below, so we obtain it as a string using toString().
-			std::string poseString = currentPose.toString();
+			//std::string poseString = currentPose.toString();
 
-			std::cout << '[' << (whichArm == myo::armLeft ? "L" : "R") << ']'
-				<< '[' << poseString << std::string(14 - poseString.size(), ' ') << ']';
+			//std::cout << '[' << (whichArm == myo::armLeft ? "L" : "R") << ']'
+				//<< '[' << poseString << std::string(14 - poseString.size(), ' ') << ']';
 		}
 		else {
 			// Print out a placeholder for the arm and pose when Myo doesn't currently know which arm it's on.
-			std::cout << "[?]" << '[' << std::string(14, ' ') << ']';
+			//std::cout << "[?]" << '[' << std::string(14, ' ') << ']';
 		}
 
 		std::cout << std::flush;
@@ -170,6 +242,8 @@ public:
 	double forearm;
 	double maxForce;
 	double maxAccel;
+	double poundToNewton;
+	double times;
 	myo::Pose currentPose;
 };
 
