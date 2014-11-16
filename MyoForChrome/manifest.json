@@ -1,0 +1,17 @@
+{
+  "manifest_version": 2,
+  "name": "Myo For Chrome",
+  "description": "Brah",
+  "version": "1.0",
+  
+  "permissions": [ "tabs" ],
+  
+  "browser_action": {
+    "scripts": [ "background.js"]
+  },
+  "content_scripts": [ {
+    "js": [ "jquery-2.1.1.js", "myo.js" ],
+    "matches": [ "http://*/*", "https://*/*"]
+  }]
+  
+}
